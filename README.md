@@ -242,5 +242,4 @@ This project is documented in a four-part article series published on Dev.to and
 **Kehinde Abiuwa** — AWS Certified Solutions Architect (Professional) | Microsoft AZ-305
 
 - Email: abiuwakehinde96@outlook.com
-- Open to Solutions Architect roles (remote/hybrid)
 - [LinkedIn](https://www.linkedin.com/in/kehinde-abiuwa-b68087247) · [Dev.to](https://dev.to/kehindeabiuwadotcom)
