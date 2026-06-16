@@ -49,6 +49,9 @@ DynamoDB stores and retrieves items by their partition key. With `userId` as the
 
 **Capacity mode:** I used On-Demand (PAY_PER_REQUEST). No need to predict throughput. DynamoDB scales automatically and you pay only for what you use. For a production app with predictable traffic, Provisioned capacity with Auto Scaling is more cost-efficient.
 
+![The UserData table in the DynamoDB console](https://raw.githubusercontent.com/kehindeabiuwa-dotcom/aws-three-tier-serverless/main/screenshots/part-3/01-dynamodb-setup.png)
+*The UserData table created in DynamoDB with userId as the partition key.*
+
 **Seed data:**
 
 ```json
@@ -72,9 +75,15 @@ AWS shows you six DynamoDB-related managed policies. Two of them look like they 
 
 **Do not use either of these.** They sound right but are designed for a completely different pattern — DynamoDB Streams, where DynamoDB pushes events to Lambda. They do not grant `dynamodb:GetItem` on a table. Attaching them does nothing for our use case.
 
+![The DynamoDB managed policies shown when attaching permissions](https://raw.githubusercontent.com/kehindeabiuwa-dotcom/aws-three-tier-serverless/main/screenshots/part-3/02-iam-policy-selection.png)
+*The DynamoDB-related managed policies AWS offers when attaching permissions to the role.*
+
 So I attached `AmazonDynamoDBReadOnlyAccess` instead. And it worked. The Lambda could now retrieve user records.
 
 But I was not done.
+
+![Attaching the AmazonDynamoDBReadOnlyAccess managed policy](https://raw.githubusercontent.com/kehindeabiuwa-dotcom/aws-three-tier-serverless/main/screenshots/part-3/03-first-iam-mistake.png)
+*The intentional first mistake — attaching the broad AmazonDynamoDBReadOnlyAccess managed policy.*
 
 ---
 
@@ -157,6 +166,9 @@ I replaced the managed policy with a custom inline policy scoped to exactly what
 
 Two statements. That is all.
 
+![The least-privilege inline policy in the IAM console](https://raw.githubusercontent.com/kehindeabiuwa-dotcom/aws-three-tier-serverless/main/screenshots/part-3/04-inline-policy.png)
+*The custom inline policy scoped to dynamodb:GetItem on the UserData table only.*
+
 1. `dynamodb:GetItem` — on the specific `UserData` table ARN only. No other tables. No other actions.
 2. CloudWatch Logs — so the function can write its execution logs.
 
@@ -201,6 +213,9 @@ Result:
 ```
 
 And I checked CloudWatch Logs to confirm there were no `AccessDenied` errors anywhere.
+
+![The Lambda test event returning a 200 with the user item](https://raw.githubusercontent.com/kehindeabiuwa-dotcom/aws-three-tier-serverless/main/screenshots/part-3/05-final-validation.png)
+*The Lambda test returning 200 with the user item — confirming the scoped policy works.*
 
 ---
 
@@ -260,7 +275,7 @@ In the final part, we wire all three tiers together — connecting the CloudFron
 
 ## Architecture Diagram
 
-*[Include Lucidchart diagram here showing: Lambda function → DynamoDB table, with IAM role/policy shown as a boundary around the Lambda]*
+![Part 3 architecture — Lambda to DynamoDB with the IAM policy as a boundary](https://raw.githubusercontent.com/kehindeabiuwa-dotcom/aws-three-tier-serverless/main/diagrams/part-3-dynamodb-iam.png)
 
 ---
 
