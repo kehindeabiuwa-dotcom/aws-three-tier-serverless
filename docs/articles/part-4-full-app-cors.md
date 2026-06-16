@@ -12,6 +12,9 @@ This is the part where you find out if your architecture actually holds together
 
 This is the final part of the series. We wire everything together, debug the inevitable integration failures, and end up with a working end-to-end serverless web application on AWS.
 
+![The completed three-tier serverless web app on AWS](https://raw.githubusercontent.com/kehindeabiuwa-dotcom/aws-three-tier-serverless/main/screenshots/part-4/01-cover-intro.png)
+*All three tiers finally wired together into one working application.*
+
 ---
 
 ## The Complete Architecture
@@ -36,6 +39,9 @@ Amazon DynamoDB (UserData table, On-Demand)
 ```
 
 Each tier is independently scalable, independently deployable, and locked down with least-privilege IAM.
+
+![Part 4 full three-tier architecture diagram](https://raw.githubusercontent.com/kehindeabiuwa-dotcom/aws-three-tier-serverless/main/diagrams/part-4-full-architecture.png)
+*The complete three-tier architecture — S3/CloudFront frontend, API Gateway + Lambda logic tier, and DynamoDB data tier.*
 
 ---
 
@@ -91,6 +97,9 @@ No 'Access-Control-Allow-Origin' header is present on the requested resource.
 
 This is the most common error in serverless web app development. Let me explain exactly what is happening.
 
+![The CORS error shown in the browser console](https://raw.githubusercontent.com/kehindeabiuwa-dotcom/aws-three-tier-serverless/main/screenshots/part-4/02-console-errors.png)
+*The browser console blocking the request — no Access-Control-Allow-Origin header present.*
+
 ### What CORS Actually Is
 
 CORS (Cross-Origin Resource Sharing) is a browser security mechanism. A browser will refuse to complete a request from `origin-A.com` to `origin-B.com` unless `origin-B.com` explicitly says "I allow requests from `origin-A.com`." It does this by returning an `Access-Control-Allow-Origin` header.
@@ -145,6 +154,9 @@ if (event.httpMethod === "OPTIONS") {
 
 This is documented in the AWS docs but buried. The conceptual model to remember is: **API Gateway handles the preflight. Lambda handles the actual response headers.**
 
+![Enabling CORS on the API Gateway resource](https://raw.githubusercontent.com/kehindeabiuwa-dotcom/aws-three-tier-serverless/main/screenshots/part-4/03-resolving-cors.png)
+*Enabling CORS on the API Gateway resource — one of the two places it must be configured.*
+
 ### How Browser CORS Preflight Works
 
 For any cross-origin request with a non-simple method or custom headers, the browser first sends an `OPTIONS` request:
@@ -194,6 +206,9 @@ The Network tab showed:
 - `GET /users?userId=1` → 200 (actual request)
 
 The full three-tier stack was working end-to-end.
+
+![The working app with OPTIONS and GET both returning 200](https://raw.githubusercontent.com/kehindeabiuwa-dotcom/aws-three-tier-serverless/main/screenshots/part-4/04-fixed-solution.png)
+*The fixed solution — OPTIONS and GET both return 200 and the user data renders.*
 
 ---
 
