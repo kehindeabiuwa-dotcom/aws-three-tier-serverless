@@ -1,0 +1,14 @@
+{
+  "name": "retrieve-user-data",
+  "version": "1.0.0",
+  "description": "Lambda function for the Three-Tier Serverless Web App — fetches user records from DynamoDB",
+  "type": "module",
+  "main": "index.mjs",
+  "scripts": {
+    "zip": "zip -r function.zip index.mjs node_modules package.json"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.0.0",
+    "@aws-sdk/lib-dynamodb": "^3.0.0"
+  }
+}

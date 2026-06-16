@@ -1,0 +1,132 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0f1117 0%, #1a1f2e 50%, #0f1117 100%);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #e2e8f0;
+  padding: 1rem;
+}
+
+.card {
+  background: #1e2535;
+  border: 1px solid #2d3748;
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+  text-align: center;
+}
+
+.logo {
+  margin-bottom: 1.25rem;
+}
+
+h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #f7fafc;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  font-size: 0.78rem;
+  color: #718096;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+.input-group {
+  text-align: left;
+  margin-bottom: 1rem;
+}
+
+.input-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #a0aec0;
+  margin-bottom: 0.4rem;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  background: #0f1117;
+  border: 1px solid #2d3748;
+  border-radius: 8px;
+  color: #f7fafc;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input-group input:focus {
+  border-color: #FF9900;
+}
+
+button {
+  width: 100%;
+  padding: 0.75rem;
+  background: #FF9900;
+  color: #0f1117;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  margin-bottom: 1.25rem;
+}
+
+button:hover {
+  background: #e68900;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.result {
+  border-radius: 8px;
+  padding: 1rem;
+  font-size: 0.88rem;
+  text-align: left;
+  line-height: 1.6;
+}
+
+.result.hidden {
+  display: none;
+}
+
+.result.success {
+  background: #0d1f0d;
+  border: 1px solid #276749;
+  color: #9ae6b4;
+}
+
+.result.error {
+  background: #1f0d0d;
+  border: 1px solid #742a2a;
+  color: #fc8181;
+}
+
+.result pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 0.82rem;
+}

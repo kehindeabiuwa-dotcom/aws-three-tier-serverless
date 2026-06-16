@@ -1,0 +1,270 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Three-Tier Serverless Web App — S3 + CloudFront (presentation) →
+  API Gateway + Lambda (logic) → DynamoDB (data).
+  Deploy this stack to provision the full infrastructure in one command.
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: three-tier-app
+    Description: Used as a prefix for all resource names.
+  AllowedOrigin:
+    Type: String
+    Default: "*"
+    Description: >
+      CloudFront domain (e.g. https://d1234abcd.cloudfront.net) to allow in
+      CORS headers. Use '*' only for development; restrict in production.
+
+# ---------------------------------------------------------------------------
+# Resources
+# ---------------------------------------------------------------------------
+Resources:
+
+  # ── Presentation tier: S3 + CloudFront ────────────────────────────────────
+
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${ProjectName}-frontend-${AWS::AccountId}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+
+  # OAC lets CloudFront sign requests to S3 with SigV4 so the bucket can
+  # stay fully private while CloudFront can still read objects.
+  CloudFrontOAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub "${ProjectName}-oac"
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            S3OriginConfig: {}
+            OriginAccessControlId: !GetAtt CloudFrontOAC.Id
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6  # CachingOptimized
+          AllowedMethods: [GET, HEAD]
+          Compress: true
+        HttpVersion: http2
+        IPV6Enabled: true
+        PriceClass: PriceClass_100
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowCloudFrontServicePrincipalReadOnly
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub "arn:aws:s3:::${FrontendBucket}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
+
+  # ── Data tier: DynamoDB ────────────────────────────────────────────────────
+
+  UserDataTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: UserData
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      SSESpecification:
+        SSEEnabled: true
+
+  # ── Logic tier: Lambda + IAM ───────────────────────────────────────────────
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ProjectName}-lambda-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: DynamoDBGetItemOnly
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: DynamoDBGetItemOnly
+                Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                Resource: !GetAtt UserDataTable.Arn
+              - Sid: CloudWatchLogs
+                Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
+
+  RetrieveUserDataFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "${ProjectName}-retrieve-user-data"
+      Runtime: nodejs22.x
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 10
+      MemorySize: 128
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref UserDataTable
+          ALLOWED_ORIGIN: !Ref AllowedOrigin
+      # Inline code — replace with S3 ZipFile reference for production deployments
+      Code:
+        ZipFile: |
+          import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+          import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
+          const client = new DynamoDBClient({});
+          const docClient = DynamoDBDocumentClient.from(client);
+          const CORS = {
+            "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN ?? "*",
+            "Access-Control-Allow-Methods": "GET,OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type,Authorization",
+          };
+          const reply = (code, body) => ({
+            statusCode: code,
+            headers: { "Content-Type": "application/json", ...CORS },
+            body: JSON.stringify(body),
+          });
+          export const handler = async (event) => {
+            if (event.httpMethod === "OPTIONS") return { statusCode: 200, headers: CORS, body: "" };
+            const userId = event.queryStringParameters?.userId;
+            if (!userId) return reply(400, { error: "Missing userId" });
+            try {
+              const r = await docClient.send(new GetCommand({ TableName: process.env.TABLE_NAME, Key: { userId } }));
+              return r.Item ? reply(200, r.Item) : reply(404, { error: "User not found" });
+            } catch (e) {
+              console.error(e);
+              return reply(500, { error: "Internal server error" });
+            }
+          };
+
+  # ── Logic tier: API Gateway ────────────────────────────────────────────────
+
+  UserRequestAPI:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub "${ProjectName}-api"
+      Description: REST API for the Three-Tier Serverless Web App
+
+  UsersResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref UserRequestAPI
+      ParentId: !GetAtt UserRequestAPI.RootResourceId
+      PathPart: users
+
+  UsersGETMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref UserRequestAPI
+      ResourceId: !Ref UsersResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub
+          - "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations"
+          - LambdaArn: !GetAtt RetrieveUserDataFunction.Arn
+
+  UsersOPTIONSMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref UserRequestAPI
+      ResourceId: !Ref UsersResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Origin: true
+
+  LambdaApiGatewayPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref RetrieveUserDataFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${UserRequestAPI}/*/GET/users"
+
+  APIDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: [UsersGETMethod, UsersOPTIONSMethod]
+    Properties:
+      RestApiId: !Ref UserRequestAPI
+
+  ProdStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId: !Ref UserRequestAPI
+      DeploymentId: !Ref APIDeployment
+      StageName: prod
+      Description: Production stage
+
+# ---------------------------------------------------------------------------
+# Outputs
+# ---------------------------------------------------------------------------
+Outputs:
+  CloudFrontURL:
+    Description: "Frontend URL — update script.js with this as the base URL"
+    Value: !Sub "https://${CloudFrontDistribution.DomainName}"
+
+  APIInvokeURL:
+    Description: "API Gateway invoke URL — paste into script.js as FETCH_URL"
+    Value: !Sub "https://${UserRequestAPI}.execute-api.${AWS::Region}.amazonaws.com/prod/users"
+
+  S3BucketName:
+    Description: "Upload your frontend files (index.html, style.css, script.js) to this bucket"
+    Value: !Ref FrontendBucket
+
+  DynamoDBTableName:
+    Description: "DynamoDB table name — add user records here"
+    Value: !Ref UserDataTable
