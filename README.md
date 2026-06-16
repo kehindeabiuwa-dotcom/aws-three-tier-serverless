@@ -4,6 +4,16 @@ A production-grade, serverless three-tier web application built entirely on AWS 
 
 **Live Architecture:** S3 + CloudFront → API Gateway → Lambda → DynamoDB
 
+![AWS](https://img.shields.io/badge/AWS-Serverless-FF9900)
+![IaC](https://img.shields.io/badge/IaC-CloudFormation-7B42BC)
+![Runtime](https://img.shields.io/badge/Lambda-Node.js%2022-339933)
+![GitHub stars](https://img.shields.io/github/stars/kehindeabiuwa-dotcom/aws-three-tier-serverless?style=social)
+![GitHub forks](https://img.shields.io/github/forks/kehindeabiuwa-dotcom/aws-three-tier-serverless?style=social)
+![Three-tier serverless architecture on AWS — S3 and CloudFront, API Gateway and Lambda, DynamoDB](https://raw.githubusercontent.com/kehindeabiuwa-dotcom/aws-three-tier-serverless/main/diagrams/part-4-full-architecture.png)
+> 📖 **Full walkthrough:** [4-part serverless series on Dev.to](https://dev.to/kehindeabiuwadotcom/how-i-delivered-a-static-website-globally-with-amazon-s3-and-cloudfront-and-the-security-mistake-i-2n38)
+>
+> ⭐ **Found this useful?** Star the repo — it helps others discover it and motivates the next part of the series.
+
 ---
 
 ## Architecture
@@ -235,6 +245,10 @@ This project is documented in a four-part article series published on Dev.to and
 - **Debugging** — CORS, CloudFront cache invalidation, IAM `AccessDenied` resolution
 - **API design** — REST API, Lambda proxy integration, OpenAPI documentation, stages
 
+---
+
+## ⭐ Support
+If this project helped you understand secure serverless architecture on AWS, please consider giving it a star. It boosts the repo's visibility and helps more people find a production-grade reference.
 ---
 
 ## Author
