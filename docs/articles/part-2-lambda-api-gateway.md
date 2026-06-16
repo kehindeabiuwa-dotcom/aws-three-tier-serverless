@@ -120,6 +120,9 @@ Modern browsers send a CORS preflight `OPTIONS` request before any cross-origin 
 
 Environment variables decouple your code from your infrastructure. When you deploy the same Lambda to a staging environment with a different table, you change the environment variable — not the code.
 
+![The RetrieveUserData Lambda function in the AWS console](https://raw.githubusercontent.com/kehindeabiuwa-dotcom/aws-three-tier-serverless/main/screenshots/part-2/01-lambda-function.png)
+*The RetrieveUserData Lambda function deployed in the AWS console.*
+
 ---
 
 ## Part 2: API Gateway
@@ -129,6 +132,9 @@ Environment variables decouple your code from your infrastructure. When you depl
 **REST API vs HTTP API**
 
 API Gateway offers two main types. HTTP API is newer, cheaper, and simpler. REST API has more configuration options (usage plans, request/response transformations, caching, WAF integration). We are using a REST API here because it maps more directly to what most production APIs require.
+
+![The UserRequestAPI REST API in the API Gateway console](https://raw.githubusercontent.com/kehindeabiuwa-dotcom/aws-three-tier-serverless/main/screenshots/part-2/02-api-gateway.png)
+*The UserRequestAPI REST API created in the API Gateway console.*
 
 **Resources and Methods**
 
@@ -140,6 +146,9 @@ An API is a tree of resources (URL paths) with HTTP methods attached:
     ├── GET       ← our method (→ Lambda)
     └── OPTIONS   ← CORS preflight (→ mock integration)
 ```
+
+![The /users resource with GET and OPTIONS methods](https://raw.githubusercontent.com/kehindeabiuwa-dotcom/aws-three-tier-serverless/main/screenshots/part-2/03-api-resources-methods.png)
+*The /users resource with its GET method (Lambda) and OPTIONS method (CORS preflight).*
 
 **Lambda Proxy Integration**
 
@@ -169,6 +178,9 @@ https://abc123.execute-api.eu-north-1.amazonaws.com/dev
 ```
 
 You can have different throttling limits, logging levels, and caching settings per stage. For this project I deployed to `prod`.
+
+![Deploying the API to the prod stage](https://raw.githubusercontent.com/kehindeabiuwa-dotcom/aws-three-tier-serverless/main/screenshots/part-2/04-api-deployment.png)
+*Deploying the API to the prod stage and the resulting invoke URL.*
 
 **This is why "Missing Authentication Token" happens:** If you hit the root of the stage URL (`/prod`) instead of the resource path (`/prod/users`), API Gateway does not know what you are asking for and returns that misleading error. Always include the full resource path.
 
@@ -239,6 +251,9 @@ This documentation matters for two reasons:
 1. Any developer consuming your API can understand it without asking you
 2. You can import it into Postman, Insomnia, or Swagger UI for interactive testing
 
+![The exported OpenAPI Swagger specification](https://raw.githubusercontent.com/kehindeabiuwa-dotcom/aws-three-tier-serverless/main/screenshots/part-2/05-api-documentation.png)
+*The OpenAPI (Swagger) spec exported directly from API Gateway.*
+
 ---
 
 ## Architecture Decisions and Trade-offs
@@ -267,7 +282,7 @@ In Part 3, we wire up the data tier: creating a DynamoDB table, seeding it with 
 
 ## Architecture Diagram
 
-*[Include Lucidchart diagram here showing: Browser → API Gateway → Lambda Proxy Integration → Lambda Function → DynamoDB (not yet connected)]*
+![Part 2 architecture — Browser to API Gateway to Lambda proxy to Lambda to DynamoDB](https://raw.githubusercontent.com/kehindeabiuwa-dotcom/aws-three-tier-serverless/main/diagrams/part-2-lambda-api-gateway.png)
 
 ---
 
