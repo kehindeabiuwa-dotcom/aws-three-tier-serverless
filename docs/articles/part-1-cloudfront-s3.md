@@ -56,6 +56,9 @@ I created an S3 bucket and uploaded three files:
 
 **Critical: do not touch the Block Public Access settings.** Leave them all on. We will not need them off.
 
+![S3 bucket with index.html, style.css and script.js uploaded, Block Public Access on](https://raw.githubusercontent.com/kehindeabiuwa-dotcom/aws-three-tier-serverless/main/screenshots/part-1/01-s3-bucket.png)
+*The bucket with all three files uploaded — Block Public Access left fully enabled.*
+
 ---
 
 ## Step 2 — Create the CloudFront Distribution
@@ -70,6 +73,9 @@ In the CloudFront console, I created a new distribution with these settings:
 | Viewer protocol policy | Redirect HTTP to HTTPS | Force TLS at the edge |
 | Cache policy | CachingOptimized | AWS-managed policy tuned for S3 origins |
 | HTTP versions | HTTP/2 | Multiplexing reduces page load time |
+
+![Creating the CloudFront distribution with Origin Access Control](https://raw.githubusercontent.com/kehindeabiuwa-dotcom/aws-three-tier-serverless/main/screenshots/part-1/02-cloudfront-distribution.png)
+*Creating the distribution — origin access set to Origin Access Control (OAC), default root object index.html.*
 
 **Why the regional domain and not the S3 website endpoint?**
 
@@ -107,6 +113,9 @@ The `Condition` block is the important part. It locks the permission down to **y
 
 Go to S3 → your bucket → Permissions → Bucket Policy → paste it in and save.
 
+![OAC configuration and the generated S3 bucket policy applied in the console](https://raw.githubusercontent.com/kehindeabiuwa-dotcom/aws-three-tier-serverless/main/screenshots/part-1/03-oac-bucket-policy.png)
+*The OAC setup and the auto-generated bucket policy pasted into S3 → Permissions.*
+
 ---
 
 ## The Error I Hit (and Why You Will Too)
@@ -114,6 +123,9 @@ Go to S3 → your bucket → Permissions → Bucket Policy → paste it in and s
 When I first set up the distribution, I left the origin access setting as *Public*. I thought: CloudFront is in front, so surely it can just read the bucket?
 
 No. CloudFront fetches from S3 as an unauthenticated request when origin access is set to Public. If Block Public Access is on (which it should be), S3 returns a 403 AccessDenied. The CloudFront distribution just serves that 403 to your users.
+
+![CloudFront returning 403 AccessDenied from a private S3 bucket](https://raw.githubusercontent.com/kehindeabiuwa-dotcom/aws-three-tier-serverless/main/screenshots/part-1/04-error-403.png)
+*403 AccessDenied — what CloudFront served while origin access was still set to Public.*
 
 The sequence of events that broke things:
 
@@ -136,6 +148,9 @@ After switching to OAC and updating the bucket policy:
 Once the site was live, I ran a comparison between CloudFront delivery and the S3 website endpoint (which I temporarily enabled with a public-read policy just for benchmarking).
 
 **CloudFront was meaningfully faster** — especially on repeat visits, where it served assets directly from the edge cache with no trip to S3 at all.
+
+![Latency comparison between CloudFront and the S3 website endpoint](https://raw.githubusercontent.com/kehindeabiuwa-dotcom/aws-three-tier-serverless/main/screenshots/part-1/05-caching-comparison.png)
+*CloudFront vs the raw S3 website endpoint — CloudFront wins, especially on cached repeat visits.*
 
 Here is why:
 
@@ -186,7 +201,7 @@ In Part 2, we will build the logic tier: a Lambda function that queries DynamoDB
 
 ## Architecture Diagram
 
-*[Include Lucidchart diagram here showing: Browser → CloudFront Edge → OAC → S3 Bucket (private)]*
+![Part 1 architecture — Browser to CloudFront edge to OAC to private S3 bucket](https://raw.githubusercontent.com/kehindeabiuwa-dotcom/aws-three-tier-serverless/main/diagrams/part-1-s3-cloudfront.png)
 
 ---
 
