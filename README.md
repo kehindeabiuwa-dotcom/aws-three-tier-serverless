@@ -243,4 +243,4 @@ This project is documented in a four-part article series published on Dev.to and
 
 - Email: abiuwakehinde96@outlook.com
 - Open to Solutions Architect roles (remote/hybrid)
-- [LinkedIn](#) · [Dev.to](#) · [Portfolio](#)
+- [LinkedIn](https://www.linkedin.com/in/kehinde-abiuwa-b68087247) · [Dev.to](https://dev.to/kehindeabiuwadotcom)

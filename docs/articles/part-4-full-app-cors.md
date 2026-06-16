@@ -332,4 +332,4 @@ aws-three-tier-serverless/
 
 *Kehinde Abiuwa — AWS Certified Solutions Architect (Professional) | Microsoft AZ-305*
 
-*Open to Solutions Architect roles (remote/hybrid) — [LinkedIn](#) | [Dev.to](#)*
+[LinkedIn](https://www.linkedin.com/in/kehinde-abiuwa-b68087247) | [Dev.to](https://dev.to/kehindeabiuwadotcom)*
