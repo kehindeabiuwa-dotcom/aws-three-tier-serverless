@@ -231,9 +231,9 @@ This project is documented in a four-part article series published on Dev.to and
 | Part | Title | Read |
 |------|-------|------|
 | 1 | How I Delivered a Static Website Globally with S3 and CloudFront (And the Security Mistake I Almost Made) | [Read on Dev.to](https://dev.to/kehindeabiuwadotcom/how-i-delivered-a-static-website-globally-with-amazon-s3-and-cloudfront-and-the-security-mistake-i-2n38) |
-| 2 | Building a Serverless REST API with Lambda and API Gateway: From Zero to OpenAPI Docs | [Read draft](docs/articles/part-2-lambda-api-gateway.md) |
-| 3 | Least-Privilege IAM for Lambda: Why I Replaced the AWS Managed Policy With My Own | [Read draft](docs/articles/part-3-dynamodb-iam.md) |
-| 4 | Wiring Together a Three-Tier Serverless Web App on AWS (And the CORS Bug That Broke Everything) | [Read draft](docs/articles/part-4-full-app-cors.md) |
+| 2 | Building a Serverless REST API with Lambda and API Gateway: From Zero to OpenAPI Docs | [Read on Dev.to](https://dev.to/kehindeabiuwadotcom/building-a-serverless-rest-api-with-aws-lambda-and-api-gateway-8df) |
+| 3 | Least-Privilege IAM for Lambda: Why I Replaced the AWS Managed Policy With My Own | [Read on Dev.to](https://dev.to/kehindeabiuwadotcom/least-privilege-iam-for-lambda-why-i-replaced-the-aws-managed-policy-with-my-own-9nh) |
+| 4 | Wiring Together a Three-Tier Serverless Web App on AWS (And the CORS Bug That Broke Everything) | [Read on Dev.to](https://dev.to/kehindeabiuwadotcom/wiring-together-a-three-tier-serverless-web-app-on-aws-and-the-cors-bug-that-broke-everything-1l1j) |
 
 ---
 
